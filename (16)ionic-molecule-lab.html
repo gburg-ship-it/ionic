@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Ionic Molecule Virtual Lab</title>
+<style>
+body { margin:0; font-family:Arial; display:flex; height:100vh; background:#eef3f9; }
+.panel { width:25%; background:white; padding:15px; border-right:1px solid #ccc; overflow:auto; }
+#center { flex:1; background:#d9e8f5; padding:10px; display:flex; flex-direction:column; align-items:center; }
+.ion { width:50px; height:50px; border-radius:50%; background:#f97316; color:white; display:flex; align-items:center; justify-content:center; margin:5px; cursor:grab; font-weight:bold; }
+.cation { background:#3b82f6; }
+.anion { background:#ef4444; }
+#reactionArea { width:90%; height:400px; background:#fff; border:2px solid #666; display:flex; flex-wrap:wrap; align-content:flex-start; position:relative; }
+button { margin-top:5px; }
+.success { color:green; font-weight:bold; text-align:center; }
+.fail { color:red; font-weight:bold; text-align:center; }
+</style>
+</head>
+<body>
+
+<div class="panel">
+<h2>Ionic Compound Lab</h2>
+<h3>Ion Bank</h3>
+<div class="ion cation" draggable="true" data-ion="Na+">Na⁺</div>
+<div class="ion cation" draggable="true" data-ion="K+">K⁺</div>
+<div class="ion cation" draggable="true" data-ion="Ca²⁺">Ca²⁺</div>
+<div class="ion anion" draggable="true" data-ion="Cl-">Cl⁻</div>
+<div class="ion anion" draggable="true" data-ion="O²⁻">O²⁻</div>
+<div class="ion anion" draggable="true" data-ion="S²⁻">S²⁻</div>
+
+<h3>Select Compound to Build</h3>
+<select id="compoundSelect" onchange="loadCompound()">
+  <option value="NaCl">NaCl</option>
+  <option value="KCl">KCl</option>
+  <option value="CaCl2">CaCl₂</option>
+  <option value="CaS">CaS</option>
+</select>
+
+<button onclick="resetLab()">Reset Lab</button>
+<div id="result"></div>
+</div>
+
+<div id="center">
+<h2>Build the Ionic Compound</h2>
+<div id="reactionArea"></div>
+</div>
+
+<script>
+let draggedIon = null;
+
+// Drag and drop setup
+document.querySelectorAll(".ion").forEach(ion=>{
+  ion.addEventListener("dragstart", ()=>{ draggedIon = ion.cloneNode(true); });
+});
+
+const reactionArea = document.getElementById("reactionArea");
+
+reactionArea.addEventListener("dragover", e=>e.preventDefault());
+reactionArea.addEventListener("drop", e=>{
+  e.preventDefault();
+  const rect = reactionArea.getBoundingClientRect();
+  draggedIon.style.position = "absolute";
+  draggedIon.style.left = Math.random()*(rect.width-50) + "px";
+  draggedIon.style.top = Math.random()*(rect.height-50) + "px";
+  reactionArea.appendChild(draggedIon);
+  checkCompound();
+});
+
+// Compound data (cation-anion ratio)
+const compounds = {
+  NaCl: {cation:"Na+", anion:"Cl-", ratio:[1,1]},
+  KCl: {cation:"K+", anion:"Cl-", ratio:[1,1]},
+  CaCl2: {cation:"Ca²⁺", anion:"Cl-", ratio:[1,2]},
+  CaS: {cation:"Ca²⁺", anion:"S²⁻", ratio:[1,1]}
+};
+
+let currentCompound = "NaCl";
+
+function loadCompound(){ 
+  resetLab();
+  currentCompound = document.getElementById("compoundSelect").value;
+}
+
+// Reset lab
+function resetLab(){
+  reactionArea.innerHTML="";
+  document.getElementById("result").innerHTML="";
+}
+
+// Check if correct compound formed
+function checkCompound(){
+  const ions = reactionArea.querySelectorAll(".ion");
+  const cationCount = Array.from(ions).filter(i=>i.dataset.ion===compounds[currentCompound].cation).length;
+  const anionCount = Array.from(ions).filter(i=>i.dataset.ion===compounds[currentCompound].anion).length;
+  const ratio = compounds[currentCompound].ratio;
+
+  // Check if ratio satisfied
+  if(cationCount>0 && anionCount>0){
+    if(cationCount/ratio[0] === anionCount/ratio[1]){
+      document.getElementById("result").innerHTML="<div class='success'>Compound Correctly Formed!</div>";
+    } else {
+      document.getElementById("result").innerHTML="<div class='fail'>Incorrect ratio. Adjust ions!</div>";
+    }
+  }
+}
+</script>
+
+</body>
+</html>
